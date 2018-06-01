@@ -4,12 +4,12 @@ import io
 
 class VCFreader :
     ''' 
-    Define objects to read FastA files.
+    Define objects to read VCF files.
     instantiation: 
-    thisReader = FastAreader ('testTiny.fa')
+    thisReader = VCFreader("NewChr1.snp.vcf")
     usage:
-    for head, seq in thisReader.readFasta():
-        #### print (head,seq)
+    for line in thisReader.readVCF():
+        #### print (line)
     '''
     def __init__ (self, fname=''):
         '''contructor: saves attribute fname '''
@@ -54,8 +54,6 @@ def main():
             for column in range(0,max(len(populationColumns1),len(populationColumns2))):
                 colPop_1 = populationColumns1[column]
                 colPop_2 = populationColumns2[column]
-                # print(populationColumns1,populationColumns2)
-                # print((lineList[column][:1]),lineList[column][2:3])
                 if (lineList[colPop_1][2:3] != '.'): 
                     if int(lineList[colPop_1][2:3])<=1:
                         denom1 += 1
@@ -79,30 +77,17 @@ def main():
                 denom2 = 1 # so theres no dividing by zero
             chrom_number1 = denom1
             chrom_number2 = denom2
-            # print(chrom_number2,chrom_number1)
             if chrom_number1 < 14 or chrom_number2 < 14:
                 continue
-                # print("moving on1")
             elif abs(numer1/denom1-numer2/denom2) < float(c):
                 continue
             else :
-                # print("found allele: {}".format(lineList))
-                # print("{},{}: {} {} {} {}/{}={}|{}/{}={}, allelefreq={}".format(\
-                #             populationName1,populationName2,lineList[1],lineList[3],lineList[4],\
-                #             numer1,denom1,round(numer1/denom1,3),numer2,denom2,round(numer2/denom2,3),\
-                #             round(abs(numer1/denom1-numer2/denom2),3)))
+                print("{}\t{}\t{}\t{}\t{}\t{}/{}\t{}\t{}/{}\t{}\tallelefreq={}".format(\
+                            populationName1,populationName2,lineList[1],lineList[3],lineList[4],\
+                            numer1,denom1,round(numer1/denom1,3),numer2,denom2,round(numer2/denom2,3),\
+                            round(abs(numer1/denom1-numer2/denom2),3)))
                 # if numAboveC % 10000==0: print(numAboveC)
                 numAboveC += 1
-            # if numer1+numer2 >= 14:
-            #     if denom1 > len(populationColumns1)/2 and denom2 > len(populationColumns2)/2:
-            #         if abs(numer1/denom1-numer2/denom2) > float(c):
-                        # numAboveC+=1
-                        # print(lineList[colPop_1],lineList[colPop_2])
-
-                        # print("{},{}: {} {} {} {}/{}={}|{}/{}={}, allelefreq={}".format(\
-                        #     populationName1,populationName2,lineList[1],lineList[3],lineList[4],\
-                        #     numer1,denom1,round(numer1/denom1,3),numer2,denom2,round(numer2/denom2,3),\
-                        #     round(abs(numer1/denom1-numer2/denom2),3)))
-    print(numAboveC)
+    print("#",numAboveC)
 main()
 
