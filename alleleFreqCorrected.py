@@ -33,14 +33,15 @@ class VCFreader :
 
 
 def main():
-    numAboveC = 0
 
-    
     try:
         c = float(sys.argv[1])
-        populationName1 = str(sys.argv[2])
-        populationName2 = str(sys.argv[3])
-        fileName = str(sys.argv[4])
+        locusLength = int(sys.argv[2])
+
+        populationName1 = str(sys.argv[3])
+        populationName2 = str(sys.argv[4])
+        fileName = str(sys.argv[5])
+
         try:
             read = VCFreader(fileName)
         except FileNotFoundError:
@@ -50,9 +51,9 @@ def main():
             print(fileName, 'to be read')
 
     except IndexError:
-        if(len(sys.argv) != 5):
+        if(len(sys.argv) != 6):
             print("Incorrect number of arguments. Usage:\n \
-    python alleleFreqCorrected.py [float c-value] [population name 1] [population name 2] [filename]\n")
+    python alleleFreqCorrected.py [float c-value] [min locus distance] [population name 1] [population name 2] [filename]\n")
         else:
             print("Usage: python alleleFreqCorrected.py [float c-value] [population name 1] [population name 2] [filename]")
         return
@@ -61,19 +62,26 @@ def main():
         return
         
     
-
+    currentchrom =0
+    numAboveC = 0
     for line in read.readVCF():
         denom1 = 0
         numer1 = 0
         denom2 = 0
         numer2 = 0
+
         lineList = list(line.split('\t'))
+
+        if lineList[0] == '':
+            break
         if lineList[0].startswith('##'):
             continue
         elif lineList[0].startswith('#'):
             populationColumns1 = [ i for i, column in enumerate(lineList) if re.search('^'+populationName1, column) ]
             populationColumns2 = [ i for i, column in enumerate(lineList) if re.search('^'+populationName2, column) ]
-        else:
+        else :
+            if currentchrom == 0:
+                currentchrom = int(lineList[1])
             for column in range(0,max(len(populationColumns1),len(populationColumns2))):
                 colPop_1 = populationColumns1[column]
                 colPop_2 = populationColumns2[column]
@@ -100,17 +108,21 @@ def main():
                 denom2 = 1 # so theres no dividing by zero
             chrom_number1 = denom1
             chrom_number2 = denom2
-            if chrom_number1 <= 14 or chrom_number2 <= 14: # make parameter the code for min chromosome number
+            if chrom_number1 < 14 or chrom_number2 < 14: # make parameter the code for min chromosome number
                 continue
             elif abs(numer1/denom1-numer2/denom2) < float(c):
                 continue
             else :
-                print("{}\t{}\t{}\t{}\t{}\t{}/{}\t{}\t{}/{}\t{}\tallelefreq={}".format(\
-                            populationName1,populationName2,lineList[1],lineList[3],lineList[4],\
-                            numer1,denom1,round(numer1/denom1,3),numer2,denom2,round(numer2/denom2,3),\
-                            round(abs(numer1/denom1-numer2/denom2),3)))
+                # print(abs(currentchrom - int(lineList[1])))
+                if (abs(currentchrom - int(lineList[1])) > locusLength):
+                    currentchrom = int(lineList[1])
+                    print("{}\t{}\t{}\t{}\t{}\t{}/{}\t{}\t{}/{}\t{}\tallelefreq={}".format(\
+                                populationName1,populationName2,lineList[1],lineList[3],lineList[4],\
+                                numer1,denom1,round(numer1/denom1,3),numer2,denom2,round(numer2/denom2,3),\
+                                round(abs(numer1/denom1-numer2/denom2),3)))
                 # if numAboveC % 10000==0: print(numAboveC)
                 numAboveC += 1
+
     print("#",numAboveC)
 main()
 
