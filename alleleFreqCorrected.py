@@ -14,6 +14,7 @@ class VCFreader :
     def __init__ (self, fname=''):
         '''contructor: saves attribute fname '''
         self.fname = fname
+        self.doOpen()
     def doOpen (self):
         ''' Handle file opens, allowing STDIN.'''
         if self.fname is '':
@@ -24,11 +25,12 @@ class VCFreader :
         ''' Read an entire VCF record and return the sequence header/sequence'''
         line = ''
         with self.doOpen() as fileH:
-            line = fileH.readline()
-            print(line)
             for line in fileH:
                 yield line
-        yield line
+                line = fileH.readline()
+                # print(line)
+
+
 
 def main():
     numAboveC = 0
@@ -39,15 +41,13 @@ def main():
         populationName1 = str(sys.argv[2])
         populationName2 = str(sys.argv[3])
         fileName = str(sys.argv[4])
-        read = VCFreader(fileName)
         try:
-            f = open(fileName, 'r')
-        except OSError:
+            read = VCFreader(fileName)
+        except FileNotFoundError:
             print('cannot open', fileName)
             return
         else:
-            print(fileName, 'has', len(f.readlines()), 'lines')
-            f.close()
+            print(fileName, 'to be read')
 
     except IndexError:
         if(len(sys.argv) != 5):
@@ -68,10 +68,15 @@ def main():
         denom2 = 0
         numer2 = 0
         lineList = list(line.split('\t'))
-        print(lineList)
+        print(line)
+
         if lineList[0].startswith('##'):
+            print(lineList)
+
             continue
         elif lineList[0].startswith('#'):
+            print(lineList)
+
             populationColumns1 = [ i for i, column in enumerate(lineList) if re.search('^'+populationName1, column) ]
             populationColumns2 = [ i for i, column in enumerate(lineList) if re.search('^'+populationName2, column) ]
         else:
