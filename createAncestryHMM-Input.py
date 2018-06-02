@@ -29,11 +29,8 @@ class VCFreader :
                 while not line.startswith('##'):
                     yield line
                     line = fileH.readline()
-
-
-
-def main():
-    numAboveC = 0
+    def calcAlleleFreq(self):
+         numAboveC = 0
 
     
     try:
@@ -112,5 +109,5 @@ def main():
                 # if numAboveC % 10000==0: print(numAboveC)
                 numAboveC += 1
     print("#",numAboveC)
-main()
+
 
