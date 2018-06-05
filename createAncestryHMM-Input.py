@@ -46,10 +46,11 @@ class FreqDistanceCalculator :
                     +"\n[refPanel names(requires 2 names)]\n\t (at least 2 Strings no quotes) Names of reference panels in the VCF file.\n\t Reference panels should be named like guanaco0 guanaco1 guanaco2 etc.\n\t Example argument: guanaco\n" \
                     +"\n[sample names]\n\t (at least 2 Strings no quotes) Names of sample panels to be run in Ancestry_HMM. \n\t Should be named like llama1 llama2 llama3 etc.\n\t Example argument: llama\n"
         numAboveC = 0
-        if '-help' in sys.argv[1]:
-            print(helpString)
-            exit()
+        
         try:
+            if '-help' in sys.argv[1]:
+                print(helpString)
+                exit()
             self.c = float(sys.argv[1])
             self.locusLength = int(sys.argv[2])
             self.refPanelNumber = int(sys.argv[3])
