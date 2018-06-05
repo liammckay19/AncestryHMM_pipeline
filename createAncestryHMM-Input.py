@@ -37,14 +37,14 @@ class FreqDistanceCalculator :
                     +"      [number of reference panels] [recombination_rate] [minChrom] [filename] \n" \
                     +"      [refPanel names(requires 2 names)] [sample names][...][...] \n"\
                     +"Type -help to get descriptions of arguments\n "
-        helpString = "[allelefreq cutoff]\n\t Cutoff value for reference panel allele frequency calculation\n"\
-                    +"\n[min locus distance]\n\t Minimum distance between each allele locus\n" \
-                    +"\n[number of reference panels]\n\t Number of reference panel species in the VCF\n" \
-                    +"\n[recombination_rate]\n\t Estimated recombination rate for recombination probability for Ancestry_HMM input.\n\t Recombination probability is computed as recombination_rate * allele_distance\n" \
-                    +"\n[minChrom]\n\t The minimum amount of chromosomes that must be present in the reference panel alleles to make it through the threshold\n" \
-                    +"\n[filename]\n\t Name of VCF file on local machine\n" \
-                    +"\n[refPanel names(requires 2 names)]\n\t Names of reference panels in the VCF file.\n\t Reference panels should be named like guanaco0 guanaco1 guanaco2 etc.\n\t Example argument: guanaco\n" \
-                    +"\n[sample names]\n\t Names of sample panels to be run in Ancestry_HMM. \n\t Should be named like llama1 llama2 llama3 etc.\n\t Example argument: llama\n"
+        helpString = "[allelefreq cutoff]\n\t (Float) cutoff value for reference panel allele frequency calculation\n"\
+                    +"\n[min locus distance]\n\t (Integer) minimum distance between each allele locus\n" \
+                    +"\n[number of reference panels]\n\t (Integer) number of reference panel species in the VCF\n" \
+                    +"\n[recombination_rate]\n\t (Float) estimated recombination rate for recombination probability for Ancestry_HMM input.\n\t Recombination probability is computed as recombination_rate * allele_distance\n" \
+                    +"\n[minChrom]\n\t (Integer) the minimum amount of chromosomes that must be present in the reference panel alleles to make it through the threshold\n" \
+                    +"\n[filename]\n\t (String no quotes) Name of VCF file on local machine\n" \
+                    +"\n[refPanel names(requires 2 names)]\n\t (at least 2 Strings no quotes) Names of reference panels in the VCF file.\n\t Reference panels should be named like guanaco0 guanaco1 guanaco2 etc.\n\t Example argument: guanaco\n" \
+                    +"\n[sample names]\n\t (at least 2 Strings no quotes) Names of sample panels to be run in Ancestry_HMM. \n\t Should be named like llama1 llama2 llama3 etc.\n\t Example argument: llama\n"
         numAboveC = 0
         if '-help' in sys.argv[1]:
             print(helpString)
