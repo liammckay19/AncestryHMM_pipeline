@@ -40,7 +40,7 @@ class FreqDistanceCalculator :
         helpString = "[allelefreq cutoff]\n\t (Float) cutoff value for reference panel allele frequency calculation\n"\
                     +"\n[min locus distance]\n\t (Integer) minimum distance between each allele locus\n" \
                     +"\n[number of reference panels]\n\t (Integer) number of reference panel species in the VCF\n" \
-                    +"\n[recombination_rate]\n\t (Float) estimated recombination rate for recombination probability for Ancestry_HMM input.\n\t Recombination probability is computed as recombination_rate * allele_distance\n" \
+                    +"\n[recombination_rate]\n\t (Float) estimated recombination rate for recombination probability for Ancestry_HMM input.\n\t Average recombinations per base pairs\n" \
                     +"\n[minChrom]\n\t (Integer) the minimum amount of chromosomes that must be present in the reference panel alleles to make it through the threshold\n" \
                     +"\n[filename]\n\t (String no quotes) Name of VCF file on local machine\n" \
                     +"\n[refPanel names(requires 2 names)]\n\t (at least 2 Strings no quotes) Names of reference panels in the VCF file.\n\t Reference panels should be named like guanaco0 guanaco1 guanaco2 etc.\n\t Example argument: guanaco\n" \
@@ -93,9 +93,9 @@ class FreqDistanceCalculator :
         currentLocus = 0
 
         for line in self.read.readVCF():
-            denom1 = 0
+            reference0_count = 0
             numer1 = 0
-            denom2 = 0
+            reference1_count = 0
             numer2 = 0
             lineList = list(line.split('\t'))
             if lineList[0] == '':
@@ -111,38 +111,38 @@ class FreqDistanceCalculator :
                     colPop_2 = populationColumns2[column]
                     if (lineList[colPop_1][2:3] != '.'): 
                         if int(lineList[colPop_1][2:3])<=1:
-                            denom1 += 1
+                            reference0_count += 1
 
                     if (lineList[colPop_1][:1] != '.'): 
                         if int(lineList[colPop_1][:1])<=1:
                             numer1 += int(lineList[colPop_1][:1])
-                            denom1 += 1
+                            reference0_count += 1
                     if (lineList[colPop_2][2:3] != '.'):
                         if int(lineList[colPop_2][2:3])<=1:
-                            denom2 += 1
+                            reference1_count += 1
 
                     if (lineList[colPop_2][:1] != '.'):
                         if int(lineList[colPop_2][:1])<=1:
                             numer2 += int(lineList[colPop_2][:1])
-                            denom2 += 1
+                            reference1_count += 1
 
-                if denom1 == 0:
-                    denom1 = 1 # so theres no dividing by zero
-                if denom2 == 0:
-                    denom2 = 1 # so theres no dividing by zero
-                chrom_number1 = denom1
-                chrom_number2 = denom2
+                if reference0_count == 0:
+                    reference0_count = 1 # so theres no dividing by zero
+                if reference1_count == 0:
+                    reference1_count = 1 # so theres no dividing by zero
+                chrom_number1 = reference0_count
+                chrom_number2 = reference1_count
                 if chrom_number1 <= 14 or chrom_number2 <= 14: # make parameter the code for min chromosome number
                     continue
-                elif abs(numer1/denom1-numer2/denom2) < self.c:
+                elif abs(numer1/reference0_count-numer2/reference1_count) < self.c:
                     continue
                 else :
                     if (abs(currentLocus - int(lineList[1])) > self.locusLength):
                         currentLocus = int(lineList[1])
                         outFile.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\tallelefreq={}\n".format(\
                                     self.populationNames[0],self.populationNames[1],lineList[1],lineList[3],lineList[4],\
-                                    numer1,denom1,round(numer1/denom1,3),numer2,denom2,round(numer2/denom2,3),\
-                                    round(abs(numer1/denom1-numer2/denom2),3)))
+                                    numer1,reference0_count,round(numer1/reference0_count,3),numer2,reference1_count,round(numer2/reference1_count,3),\
+                                    round(abs(numer1/reference0_count-numer2/reference1_count),3)))
                     numAboveC += 1
         outFile.write("#"+str(numAboveC))
 
@@ -151,9 +151,9 @@ class FreqDistanceCalculator :
         outFile = open(outFileName, 'w')
         currentLocus = 0
         for line in self.read.readVCF():
-            denom1 = 0
+            reference0_count = 0
             numer1 = 0
-            denom2 = 0
+            reference1_count = 0
             numer2 = 0
             reference0AlleleA = 0
             reference0Allelea = 0
@@ -185,36 +185,36 @@ class FreqDistanceCalculator :
                             if int(lineList[refPop1][:1])<=1:
                                 numer1 += int(lineList[refPop1][:1])
                                 reference0AlleleA += int(lineList[refPop1][:1])
-                                denom1 += 1
+                                reference0_count += 1
                         if (lineList[refPop1][2:3] != '.'): 
                             if int(lineList[refPop1][2:3])<=1:
-                                reference0Allelea += int(lineList[refPop1][:1])
-                                denom1 += 1
+                                reference0AlleleA += int(lineList[refPop1][2:3])
+                                reference0_count += 1
 
                         if (lineList[refPop2][:1] != '.'):
                             if int(lineList[refPop2][:1])<=1:
                                 reference1AlleleA += int(lineList[refPop2][:1])
                                 numer2 += int(lineList[refPop2][:1])
-                                denom2 += 1
+                                reference1_count += 1
                         if (lineList[refPop2][2:3] != '.'):
                             if int(lineList[refPop2][2:3])<=1:
-                                reference1Allelea += int(lineList[refPop2][:1])
-                                denom2 += 1
-
+                                reference1AlleleA += int(lineList[refPop2][2:3])
+                                reference1_count += 1
+                                
+                    alleleCountRefAltList.append(reference0_count-reference0AlleleA)
                     alleleCountRefAltList.append(reference0AlleleA)
-                    alleleCountRefAltList.append(reference0Allelea)
+                    alleleCountRefAltList.append(reference1_count-reference1AlleleA)
                     alleleCountRefAltList.append(reference1AlleleA)
-                    alleleCountRefAltList.append(reference1Allelea)
 
-                    if denom1 == 0:
-                        denom1 = 1 # so theres no dividing by zero
-                    if denom2 == 0:
-                        denom2 = 1 # so theres no dividing by zero
-                    chrom_number1 = denom1
-                    chrom_number2 = denom2
+                    if reference0_count == 0:
+                        reference0_count = 1 # so theres no dividing by zero
+                    if reference1_count == 0:
+                        reference1_count = 1 # so theres no dividing by zero
+                    chrom_number1 = reference0_count
+                    chrom_number2 = reference1_count
                     if chrom_number1 < self.minChrom or chrom_number2 < self.minChrom: # make parameter the code for min chromosome number
                         continue
-                    elif abs(numer1/denom1-numer2/denom2) < self.c:
+                    elif abs(reference0AlleleA/reference0_count-reference1AlleleA/reference1_count) < self.c:
                         continue
                     else :
                         # alleleCountRefAltList.append()
@@ -225,7 +225,7 @@ class FreqDistanceCalculator :
                             recombinationFrequency=distanceToNextLocus*self.recombinationRate
                             alleleCountRefAltListString ='\t'.join(str(e) for e in alleleCountRefAltList)
                             readCountRefAltListString='\t'.join(str(e) for e in readCountRefAltList)
-                            outFile.write("{}\t{}\t{}\t{}\t{}\n".format(\
+                            print("{}\t{}\t{}\t{}\t{}\n".format(\
                                         chromosomeNumber,currentLocus,alleleCountRefAltListString,recombinationFrequency,readCountRefAltListString))
 
 # 1. Chromosome
@@ -249,7 +249,7 @@ class FreqDistanceCalculator :
 def main():
     testObject = FreqDistanceCalculator()
     # testObject.createPrunedFreqDistanceDataFile('prunedAlleleFreq-Distance.tsv')
-    fileOut= input("Name of file for Ancestry_HMM input:")
+    fileOut= input("Name of output file:")
     testObject.createAncestryHMMInputFile(fileOut)
     print('Created '+fileOut+" for Ancestry_HMM input")
     # create a commandline flag for making a pruned data set for two populations or for computing an input file for Russ's program
