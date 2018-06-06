@@ -225,7 +225,7 @@ class FreqDistanceCalculator :
                             recombinationFrequency=distanceToNextLocus*self.recombinationRate
                             alleleCountRefAltListString ='\t'.join(str(e) for e in alleleCountRefAltList)
                             readCountRefAltListString='\t'.join(str(e) for e in readCountRefAltList)
-                            print("{}\t{}\t{}\t{}\t{}\n".format(\
+                            outFile.write("{}\t{}\t{}\t{}\t{}\n".format(\
                                         chromosomeNumber,currentLocus,alleleCountRefAltListString,recombinationFrequency,readCountRefAltListString))
 
 # 1. Chromosome
