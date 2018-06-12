@@ -153,13 +153,13 @@ class FreqDistanceCalculator :
         for line in self.read.readVCF():
             reference0_count = 0;reference1_count = 0;reference0AlleleA = 0;
             reference1AlleleA = 0;sampleAlleleA=0;sample_count=0
+            chromosomeNumber = 0
+            position = 0
+            recombinationFrequency = 0.0
 
             lineList = list(line.split('\t'))
             alleleCountRefAltList = []
             readCountRefAltList = []
-            chromosomeNumber = 0
-            position = 0
-            recombinationFrequency = 0.0
             if lineList[0] == '':
                 break
             if lineList[0].startswith('##'):
@@ -169,7 +169,7 @@ class FreqDistanceCalculator :
                 for populationName in self.populationNames:
                     populationColumnsList.append([ i for i, column in enumerate(lineList) if re.search('^'+populationName, column) ])
                 print(populationColumnsList) 
-                # ref lists [0] [1] sample list [2] [3] 
+                # ref lists [0] [1] sample list [2] [3] ...
             else: 
                
                 for refpopulation in range(1,self.refPanelNumber):
@@ -228,34 +228,13 @@ class FreqDistanceCalculator :
                         recombinationFrequency=distanceToNextLocus*self.recombinationRate
                         alleleCountRefAltListString ='\t'.join(str(e) for e in alleleCountRefAltList)
                         readCountRefAltListString='\t'.join(str(e) for e in readCountRefAltList)
-                        print("{}\t{}\t{}\t{}\t{}\n".format(\
+                        outFile.write("{}\t{}\t{}\t{}\t{}\n".format(\
                                     chromosomeNumber,currentLocus,alleleCountRefAltListString,recombinationFrequency,readCountRefAltListString))
-
-# 1. Chromosome
-# 2. Position in basepairs
-# 3. Allele counts of allele A in reference panel 0
-# 4. Allele counts of allele a in reference panel 0
-# 5. Allele counts of allele A in reference panel 1
-# 6. Allele counts of allele a in reference panel 1
-# If there are additional reference panels, they are included following these columns. So, the next panel would be columns 7 and 8, the next 9 and 10, and so on. All of the following column numbers would be augmented by two for each additional reference panel included. The number of reference panels provided must match the number specified on the command line using –a.
-# 7. Distance in Morgans between the previous marker and this position. For the first position on a given chromosome, this may take any value, as it will be ignored.
-# Following this, an option column is the site-specific error rates for each allele. Here, the first column denotes the error rate where a read (or genotype) that is really an A is reported as a, and vice versa for the following column. If this is provided (via specifying –E on the command line), the following columns numbers should also be augmented by two as well.
-# Each sample is then represented by two columns with counts corresponding to
-# 8. Read counts of allele A in sample 1
-# 9. Read counts of allele a in sample 1
-# 10. Read counts of allele A in sample 2 
-# 11. Read counts of allele a in sample 2
-
-
-      
-
 def main():
     testObject = FreqDistanceCalculator()
-    # testObject.createPrunedFreqDistanceDataFile('prunedAlleleFreq-Distance.tsv')
-    # fileOut= input("Name of output file:")
-    fileOut='outputTest.tsv'
+    fileOut= input("Name of output file:")
     testObject.createAncestryHMMInputFile(fileOut)
-    # print('Created output file:'+fileOut+" for Ancestry_HMM input")
+    print('Created output file:'+fileOut+" for Ancestry_HMM input")
     # create a commandline flag for making a pruned data set for two populations or for computing an input file for Russ's program
 
 main()
