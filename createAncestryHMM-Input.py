@@ -1,6 +1,8 @@
 import sys
 import re
 import io
+import configparser
+
 
 
 class VCFreader :
@@ -33,10 +35,12 @@ class VCFreader :
 
 class FreqDistanceCalculator :
     def __init__(self):
-        usage="\nUsage: python alleleFreqCorrected.py [allelefreq cutoff] [min locus distance]\n" \
-                    +"      [number of reference panels] [recombination_rate] [minChrom] [filename] \n" \
-                    +"      [refPanel names(requires 2 names)] [sample names][...][...] \n"\
-                    +"Type python createAncestryHMM-Input.py -help to get descriptions of arguments\n "
+        config = configparser.ConfigParser()
+        config.read('config.ini')
+        print(dict(config['DEFAULT'].items()))
+        usage="\nUsage: python createAncestryHMM-Input.py  \n"\
+                    +"Type python createAncestryHMM-Input.py -help to get descriptions of arguments\n "\
+                    +"You must have edited the config.ini file to read in parameters"
         helpString = "[allelefreq cutoff]\n\t (Float) cutoff value for reference panel allele frequency calculation\n"\
                     +"\n[min locus distance]\n\t (Integer) minimum distance between each allele locus\n" \
                     +"\n[number of reference panels]\n\t (Integer) number of reference panel species in the VCF\n" \
@@ -47,38 +51,20 @@ class FreqDistanceCalculator :
                     +"\n[sample names]\n\t (at least 2 Strings no quotes) Names of sample panels to be run in Ancestry_HMM. \n\t Should be named like llama1 llama2 llama3 etc.\n\t Example argument: llama\n"
         numAboveC = 0
         
-        try:
+        
+        if (len(sys.argv) <0):
             if '-help' in sys.argv[1]:
                 print(helpString)
                 exit()
-            self.c = float(sys.argv[1])
-            self.locusLength = int(sys.argv[2])
-            self.refPanelNumber = int(sys.argv[3])
-            self.recombinationRate = float(sys.argv[4])
-            self.minChrom = int(sys.argv[5])
-            self.fileName = str(sys.argv[6])
-            self.populationNames = list(sys.argv[7:])
-            try:
-                self.read = VCFreader(self.fileName)
-            except FileNotFoundError as err:
-                print('{} \ncannot open'.format(err), self.fileName)
-                exit()
-            else:
-                print(self.fileName, 'to be read')
+        self.c = float(config['DEFAULT']['allelefreq cutoff'])
+        self.locusLength = int(config['DEFAULT']['min locus distance'])
+        self.refPanelNumber = int(config['DEFAULT']['number of reference panels'])
+        self.recombinationRate = float(config['DEFAULT']['recombination_rate'])
+        self.minChrom = int(config['DEFAULT']['minChrom'])
+        self.fileName = str(config['DEFAULT']['filename'])
+        self.populationNames = config['DEFAULT']['populationNames'].split(',')
+        print(self.populationNames)
 
-        except IndexError:
-            if(len(sys.argv) != 8):
-                print("Incorrect number of arguments."+usage)
-            exit()
-        except ValueError as err:
-            print("Could not parse {}\n".format(err)+usage)
-            exit()
-        except UnboundLocalError as err:
-            print("{}\nCould not read file: {}".format(err, self.fileName))
-            exit()
-        # except:
-        #     print(usage)
-        #     exit()
 
         
 
@@ -147,6 +133,14 @@ class FreqDistanceCalculator :
         outFile.write("#"+str(numAboveC))
 
     def createAncestryHMMInputFile(self, outFileName):
+        try:
+            self.read = VCFreader(self.fileName)
+        except FileNotFoundError as err:
+            print('{} \ncannot open'.format(err), self.fileName)
+            exit()
+        else:
+            print(self.fileName, 'to be read')
+
         numAboveC = 0
         outFile = open(outFileName, 'w')
         currentLocus = 0
@@ -169,8 +163,7 @@ class FreqDistanceCalculator :
                 populationColumnsList = []
                 for populationName in self.populationNames:
                     populationColumnsList.append([ i for i, column in enumerate(lineList) if re.search('^'+populationName, column) ])
-                print(populationColumnsList) 
-                # ref lists [0] [1] sample list [2] [3] ...
+                # ref lists [0] [1] ... sample list [2] [3] ...
             else: 
                
                 for refpopulation in range(1,self.refPanelNumber):
