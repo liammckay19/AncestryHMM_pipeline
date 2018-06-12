@@ -1,3 +1,4 @@
 *.vcf
+*.tsv
 test-tsv/
 local/
