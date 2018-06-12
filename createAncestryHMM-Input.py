@@ -37,7 +37,7 @@ class FreqDistanceCalculator :
     def __init__(self):
         config = configparser.ConfigParser()
         config.read('config.ini')
-        print(dict(config['DEFAULT'].items()))
+        print('Your config file input:\n',dict(config['DEFAULT'].items()))
         usage="\nUsage: python createAncestryHMM-Input.py  \n"\
                     +"Type python createAncestryHMM-Input.py -help to get descriptions of arguments\n "\
                     +"You must have edited the config.ini file to read in parameters"
@@ -65,74 +65,13 @@ class FreqDistanceCalculator :
         self.populationNames = config['DEFAULT']['populationNames'].split(',')
         print(self.populationNames)
 
-
-        
-
-    def createPrunedFreqDistanceDataFile(self, outFileStr):
-        if(len(self.populationNames)!=2):
-            print(self.populationNames)
-            print('cannot create pruned data only from other than two reference panel populations')
-            return
-
-        numAboveC = 0
-        outFile = open(outFileStr, 'w')
-        currentLocus = 0
-
-        for line in self.read.readVCF():
-            reference0_count = 0
-            numer1 = 0
-            reference1_count = 0
-            numer2 = 0
-            lineList = list(line.split('\t'))
-            if lineList[0] == '':
-                break
-            if lineList[0].startswith('##'):
-                continue
-            elif lineList[0].startswith('#'):
-                populationColumns1 = [ i for i, column in enumerate(lineList) if re.search('^'+self.populationNames[0], column) ]
-                populationColumns2 = [ i for i, column in enumerate(lineList) if re.search('^'+self.populationNames[1], column) ]
-            else:
-                for column in range(0,max(len(populationColumns1),len(populationColumns2))):
-                    colPop_1 = populationColumns1[column]
-                    colPop_2 = populationColumns2[column]
-                    if (lineList[colPop_1][2:3] != '.'): 
-                        if int(lineList[colPop_1][2:3])<=1:
-                            reference0_count += 1
-
-                    if (lineList[colPop_1][:1] != '.'): 
-                        if int(lineList[colPop_1][:1])<=1:
-                            numer1 += int(lineList[colPop_1][:1])
-                            reference0_count += 1
-                    if (lineList[colPop_2][2:3] != '.'):
-                        if int(lineList[colPop_2][2:3])<=1:
-                            reference1_count += 1
-
-                    if (lineList[colPop_2][:1] != '.'):
-                        if int(lineList[colPop_2][:1])<=1:
-                            numer2 += int(lineList[colPop_2][:1])
-                            reference1_count += 1
-
-                if reference0_count == 0:
-                    reference0_count = 1 # so theres no dividing by zero
-                if reference1_count == 0:
-                    reference1_count = 1 # so theres no dividing by zero
-                chrom_number1 = reference0_count
-                chrom_number2 = reference1_count
-                if chrom_number1 <= 14 or chrom_number2 <= 14: # make parameter the code for min chromosome number
-                    continue
-                elif abs(numer1/reference0_count-numer2/reference1_count) < self.c:
-                    continue
-                else :
-                    if (abs(currentLocus - int(lineList[1])) > self.locusLength):
-                        currentLocus = int(lineList[1])
-                        outFile.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\tallelefreq={}\n".format(\
-                                    self.populationNames[0],self.populationNames[1],lineList[1],lineList[3],lineList[4],\
-                                    numer1,reference0_count,round(numer1/reference0_count,3),numer2,reference1_count,round(numer2/reference1_count,3),\
-                                    round(abs(numer1/reference0_count-numer2/reference1_count),3)))
-                    numAboveC += 1
-        outFile.write("#"+str(numAboveC))
-
     def createAncestryHMMInputFile(self, outFileName):
+        '''
+        Create outfile for AncestryHMM Input 
+        Instantiation:
+        myOutput = createAncestryHMMInputFile('output.tsv')
+        '''
+        # attempt to read file for input; if unable, exit program
         try:
             self.read = VCFreader(self.fileName)
         except FileNotFoundError as err:
@@ -144,7 +83,7 @@ class FreqDistanceCalculator :
         numAboveC = 0
         outFile = open(outFileName, 'w')
         currentLocus = 0
-        for line in self.read.readVCF():
+        for line in self.read.readVCF(): # read line by line of VCF
             reference0_count = 0;reference1_count = 0;reference0AlleleA = 0;
             reference1AlleleA = 0;sampleAlleleA=0;sample_count=0
             chromosomeNumber = 0
@@ -155,18 +94,18 @@ class FreqDistanceCalculator :
             alleleCountRefAltList = []
             readCountRefAltList = []
             alleleFreqList = []
-            if lineList[0] == '':
+            if lineList[0] == '': # reached EOF
                 break
-            if lineList[0].startswith('##'):
+            if lineList[0].startswith('##'): # comment of VCF
                 continue
-            elif lineList[0].startswith('#'):
+            elif lineList[0].startswith('#'): # header of VCF
                 populationColumnsList = []
                 for populationName in self.populationNames:
                     populationColumnsList.append([ i for i, column in enumerate(lineList) if re.search('^'+populationName, column) ])
                 # ref lists [0] [1] ... sample list [2] [3] ...
-            else: 
+            else: # actual data of VCF
                
-                for refpopulation in range(1,self.refPanelNumber):
+                for refpopulation in range(1,self.refPanelNumber): # compute allele count for at least two reference populations
                     reference0_count=0
                     reference0AlleleA=0
                     for column in range(0,len(populationColumnsList[refpopulation])):
@@ -208,11 +147,11 @@ class FreqDistanceCalculator :
                     continue # returns back to the top of the for loop
                 elif abs(reference0AlleleA/reference0_count-reference1AlleleA/reference1_count) < self.c:
                     continue
-                else :
+                else : # if passed all thresholds specified from config.ini
                     chromosomeNumber= lineList[0][lineList[0].find('^[A-Z]'):]
                     distanceToNextLocus = abs(currentLocus - int(lineList[1]))
                     if (distanceToNextLocus > self.locusLength):
-                        for samplePopulation in range(self.refPanelNumber,len(populationColumnsList)):
+                        for samplePopulation in range(self.refPanelNumber,len(populationColumnsList)): # find read count for each sample 
                             for column in range(0,len(populationColumnsList[len(populationColumnsList)-1])):
                                 samPopCol = populationColumnsList[samplePopulation][column]
                                 # GT:AD:DP:GQ:PGT:PID:PL
@@ -222,7 +161,8 @@ class FreqDistanceCalculator :
                                         readCountRefAltList.append(read)
                 
                         currentLocus = int(lineList[1])
-                        recombinationFrequency=distanceToNextLocus*self.recombinationRate
+                        recombinationFrequency=distanceToNextLocus*self.recombinationRate 
+                        # compute recombination frequency -- simple formula = (distance*recombinationRate)
                         alleleCountRefAltListString ='\t'.join(str(e) for e in alleleCountRefAltList)
                         readCountRefAltListString='\t'.join(str(e) for e in readCountRefAltList)
                         outFile.write("{}\t{}\t{}\t{}\t{}\n".format(\
@@ -230,8 +170,7 @@ class FreqDistanceCalculator :
 def main():
     testObject = FreqDistanceCalculator()
     fileOut= input("Name of output file:")
-    testObject.createAncestryHMMInputFile(fileOut)
+    testObject.createAncestryHMMInputFile(fileOut)    
     print('Created output file:'+fileOut+" for Ancestry_HMM input")
-    # create a commandline flag for making a pruned data set for two populations or for computing an input file for Russ's program
 
 main()
