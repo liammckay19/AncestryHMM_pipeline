@@ -36,7 +36,7 @@ class FreqDistanceCalculator :
         usage="\nUsage: python alleleFreqCorrected.py [allelefreq cutoff] [min locus distance]\n" \
                     +"      [number of reference panels] [recombination_rate] [minChrom] [filename] \n" \
                     +"      [refPanel names(requires 2 names)] [sample names][...][...] \n"\
-                    +"Type -help to get descriptions of arguments\n "
+                    +"Type python createAncestryHMM-Input.py -help to get descriptions of arguments\n "
         helpString = "[allelefreq cutoff]\n\t (Float) cutoff value for reference panel allele frequency calculation\n"\
                     +"\n[min locus distance]\n\t (Integer) minimum distance between each allele locus\n" \
                     +"\n[number of reference panels]\n\t (Integer) number of reference panel species in the VCF\n" \
@@ -151,14 +151,8 @@ class FreqDistanceCalculator :
         outFile = open(outFileName, 'w')
         currentLocus = 0
         for line in self.read.readVCF():
-            reference0_count = 0
-            numer1 = 0
-            reference1_count = 0
-            numer2 = 0
-            reference0AlleleA = 0
-            reference0Allelea = 0
-            reference1AlleleA = 0
-            reference1Allelea = 0
+            reference0_count = 0;reference1_count = 0;reference0AlleleA = 0;
+            reference1AlleleA = 0;sampleAlleleA=0;sample_count=0
 
             lineList = list(line.split('\t'))
             alleleCountRefAltList = []
@@ -174,18 +168,20 @@ class FreqDistanceCalculator :
                 populationColumnsList = []
                 for populationName in self.populationNames:
                     populationColumnsList.append([ i for i, column in enumerate(lineList) if re.search('^'+populationName, column) ])
-                # print(populationColumnsList) 
+                print(populationColumnsList) 
                 # ref lists [0] [1] sample list [2] [3] 
-            else:
+            else: 
+               
                 for refpopulation in range(1,self.refPanelNumber):
                     for column in range(0,len(populationColumnsList[refpopulation])):
                         refPop1 = populationColumnsList[refpopulation-1][column]
                         refPop2 = populationColumnsList[refpopulation][column]
+                        
                         if (lineList[refPop1][:1] != '.'): 
                             if int(lineList[refPop1][:1])<=1:
-                                numer1 += int(lineList[refPop1][:1])
                                 reference0AlleleA += int(lineList[refPop1][:1])
                                 reference0_count += 1
+                        
                         if (lineList[refPop1][2:3] != '.'): 
                             if int(lineList[refPop1][2:3])<=1:
                                 reference0AlleleA += int(lineList[refPop1][2:3])
@@ -194,39 +190,46 @@ class FreqDistanceCalculator :
                         if (lineList[refPop2][:1] != '.'):
                             if int(lineList[refPop2][:1])<=1:
                                 reference1AlleleA += int(lineList[refPop2][:1])
-                                numer2 += int(lineList[refPop2][:1])
                                 reference1_count += 1
+                        
                         if (lineList[refPop2][2:3] != '.'):
                             if int(lineList[refPop2][2:3])<=1:
                                 reference1AlleleA += int(lineList[refPop2][2:3])
                                 reference1_count += 1
                                 
-                    alleleCountRefAltList.append(reference0_count-reference0AlleleA)
+                    alleleCountRefAltList.append(abs(reference0_count-reference0AlleleA))
                     alleleCountRefAltList.append(reference0AlleleA)
-                    alleleCountRefAltList.append(reference1_count-reference1AlleleA)
+                    alleleCountRefAltList.append(abs(reference1_count-reference1AlleleA))
                     alleleCountRefAltList.append(reference1AlleleA)
 
-                    if reference0_count == 0:
-                        reference0_count = 1 # so theres no dividing by zero
-                    if reference1_count == 0:
-                        reference1_count = 1 # so theres no dividing by zero
-                    chrom_number1 = reference0_count
-                    chrom_number2 = reference1_count
-                    if chrom_number1 < self.minChrom or chrom_number2 < self.minChrom: # make parameter the code for min chromosome number
-                        continue
-                    elif abs(reference0AlleleA/reference0_count-reference1AlleleA/reference1_count) < self.c:
-                        continue
-                    else :
-                        # alleleCountRefAltList.append()
-                        chromosomeNumber= lineList[0][lineList[0].find('^[A-Z]'):]
-                        distanceToNextLocus = abs(currentLocus - int(lineList[1]))
-                        if (distanceToNextLocus > self.locusLength):
-                            currentLocus = int(lineList[1])
-                            recombinationFrequency=distanceToNextLocus*self.recombinationRate
-                            alleleCountRefAltListString ='\t'.join(str(e) for e in alleleCountRefAltList)
-                            readCountRefAltListString='\t'.join(str(e) for e in readCountRefAltList)
-                            outFile.write("{}\t{}\t{}\t{}\t{}\n".format(\
-                                        chromosomeNumber,currentLocus,alleleCountRefAltListString,recombinationFrequency,readCountRefAltListString))
+                if reference0_count == 0:
+                    reference0_count = 1 # so theres no dividing by zero
+                if reference1_count == 0:
+                    reference1_count = 1 # so theres no dividing by zero
+                chrom_number1 = reference0_count
+                chrom_number2 = reference1_count
+                if chrom_number1 < self.minChrom or chrom_number2 < self.minChrom: # make parameter the code for min chromosome number
+                    continue # returns back to the top of the for loop
+                elif abs(reference0AlleleA/reference0_count-reference1AlleleA/reference1_count) < self.c:
+                    continue
+                else :
+                    chromosomeNumber= lineList[0][lineList[0].find('^[A-Z]'):]
+                    distanceToNextLocus = abs(currentLocus - int(lineList[1]))
+                    if (distanceToNextLocus > self.locusLength):
+                        for samplePopulation in range(self.refPanelNumber,len(populationColumnsList)):
+                            for column in range(0,len(populationColumnsList[len(populationColumnsList)-1])):
+                                samPopCol = populationColumnsList[samplePopulation][column]
+                                # GT:AD:DP:GQ:PGT:PID:PL
+                                readCounts = lineList[samPopCol].split(':')[1].split(',')
+                                for read in readCounts :
+                                    readCountRefAltList.append(read)
+                
+                        currentLocus = int(lineList[1])
+                        recombinationFrequency=distanceToNextLocus*self.recombinationRate
+                        alleleCountRefAltListString ='\t'.join(str(e) for e in alleleCountRefAltList)
+                        readCountRefAltListString='\t'.join(str(e) for e in readCountRefAltList)
+                        print("{}\t{}\t{}\t{}\t{}\n".format(\
+                                    chromosomeNumber,currentLocus,alleleCountRefAltListString,recombinationFrequency,readCountRefAltListString))
 
 # 1. Chromosome
 # 2. Position in basepairs
@@ -249,9 +252,10 @@ class FreqDistanceCalculator :
 def main():
     testObject = FreqDistanceCalculator()
     # testObject.createPrunedFreqDistanceDataFile('prunedAlleleFreq-Distance.tsv')
-    fileOut= input("Name of output file:")
+    # fileOut= input("Name of output file:")
+    fileOut='outputTest.tsv'
     testObject.createAncestryHMMInputFile(fileOut)
-    print('Created '+fileOut+" for Ancestry_HMM input")
+    # print('Created output file:'+fileOut+" for Ancestry_HMM input")
     # create a commandline flag for making a pruned data set for two populations or for computing an input file for Russ's program
 
 main()
