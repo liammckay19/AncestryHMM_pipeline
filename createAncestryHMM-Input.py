@@ -160,6 +160,7 @@ class FreqDistanceCalculator :
             lineList = list(line.split('\t'))
             alleleCountRefAltList = []
             readCountRefAltList = []
+            alleleFreqList = []
             if lineList[0] == '':
                 break
             if lineList[0].startswith('##'):
@@ -173,10 +174,12 @@ class FreqDistanceCalculator :
             else: 
                
                 for refpopulation in range(1,self.refPanelNumber):
+                    reference0_count=0
+                    reference0AlleleA=0
                     for column in range(0,len(populationColumnsList[refpopulation])):
                         refPop1 = populationColumnsList[refpopulation-1][column]
                         refPop2 = populationColumnsList[refpopulation][column]
-                        
+
                         if (lineList[refPop1][:1] != '.'): 
                             if int(lineList[refPop1][:1])<=1:
                                 reference0AlleleA += int(lineList[refPop1][:1])
@@ -221,8 +224,9 @@ class FreqDistanceCalculator :
                                 samPopCol = populationColumnsList[samplePopulation][column]
                                 # GT:AD:DP:GQ:PGT:PID:PL
                                 readCounts = lineList[samPopCol].split(':')[1].split(',')
-                                for read in readCounts :
-                                    readCountRefAltList.append(read)
+                                if len(readCounts) == 2:
+                                    for read in readCounts :
+                                        readCountRefAltList.append(read)
                 
                         currentLocus = int(lineList[1])
                         recombinationFrequency=distanceToNextLocus*self.recombinationRate
