@@ -102,15 +102,31 @@ class FreqDistanceCalculator :
                 populationColumnsList = []
                 for populationName in self.populationNames:
                     populationColumnsList.append([ i for i, column in enumerate(lineList) if re.search('^'+populationName, column) ])
+                
+                # check if all columns have been read
+                p = 0
+                initPopulationCount=len(populationColumnsList[0])
+                for populationColumn in populationColumnsList :
+                    if populationColumn == [] :
+                        print("Could not find population "+self.populationNames[p]+'\nExiting')
+                        exit()
+                    elif len(populationColumn) != initPopulationCount:
+                        print("Different population sizes are not allowed "+self.populationNames[p]+'\nExiting')
+                        # exit()
+                    p += 1
                 # ref lists [0] [1] ... sample list [2] [3] ...
+                print(populationColumnsList)
             else: # actual data of VCF
                
-                for refpopulation in range(1,self.refPanelNumber): # compute allele count for at least two reference populations
+                for refpopulation in range(0,self.refPanelNumber-1): # compute allele count for at least two reference populations
                     reference0_count=0
                     reference0AlleleA=0
+                    print("refpopulation"+str(refpopulation)+'-'+str(refpopulation+1))
                     for column in range(0,len(populationColumnsList[refpopulation])):
-                        refPop1 = populationColumnsList[refpopulation-1][column]
+                        refPop1 = populationColumnsList[refpopulation+1][column]
+                        print(refPop1)
                         refPop2 = populationColumnsList[refpopulation][column]
+                        print(refPop2)
 
                         if (lineList[refPop1][:1] != '.'): 
                             if int(lineList[refPop1][:1])<=1:
@@ -144,13 +160,16 @@ class FreqDistanceCalculator :
                 chrom_number1 = reference0_count
                 chrom_number2 = reference1_count
                 if chrom_number1 < self.minChrom or chrom_number2 < self.minChrom: # make parameter the code for min chromosome number
+                    print("low chrom")
                     continue # returns back to the top of the for loop
                 elif abs(reference0AlleleA/reference0_count-reference1AlleleA/reference1_count) < self.c:
+                    print('low allele freq')
                     continue
                 else : # if passed all thresholds specified from config.ini
                     chromosomeNumber= lineList[0][lineList[0].find('^[A-Z]'):]
                     distanceToNextLocus = abs(currentLocus - int(lineList[1]))
                     if (distanceToNextLocus > self.locusLength):
+                        print("low dist")
                         for samplePopulation in range(self.refPanelNumber,len(populationColumnsList)): # find read count for each sample 
                             for column in range(0,len(populationColumnsList[len(populationColumnsList)-1])):
                                 samPopCol = populationColumnsList[samplePopulation][column]
@@ -165,7 +184,7 @@ class FreqDistanceCalculator :
                         # compute recombination frequency -- simple formula = (distance*recombinationRate)
                         alleleCountRefAltListString ='\t'.join(str(e) for e in alleleCountRefAltList)
                         readCountRefAltListString='\t'.join(str(e) for e in readCountRefAltList)
-                        outFile.write("{}\t{}\t{}\t{}\t{}\n".format(\
+                        print("{}\t{}\t{}\t{}\t{}\n".format(\
                                     chromosomeNumber,currentLocus,alleleCountRefAltListString,recombinationFrequency,readCountRefAltListString))
 def main():
     testObject = FreqDistanceCalculator()
