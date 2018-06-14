@@ -1,0 +1,3 @@
+Sources 
+CEU.exon.2010_03.sites
+ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/pilot_data/release/2010_07/exon/snps/
