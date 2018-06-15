@@ -21,6 +21,7 @@ populationNames = NA121,NA122,NA123,NA124,NA125,NA127,NA128,NA10,NA11,NA120<br>
 - To see it in terminal type:<br>
 `cat <filename>`<br>
 
+# Documentation
 To use this program, edit config.ini for your input file in VCF format<br>
 There are other parameters to change as well:<br>
 <br>[allelefreq cutoff]<br> (Float) cutoff value for reference panel allele frequency calculation<br>
