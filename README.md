@@ -23,7 +23,6 @@ populationNames = NA121,NA122,NA123,NA124,NA125,NA127,NA128,NA10,NA11,NA120<br>
 
 # Documentation
 To use this program, edit config.ini for your input file in VCF format<br>
-There are other parameters to change as well:<br>
 <br>[allelefreq cutoff]<br> (Float) cutoff value for reference panel allele frequency calculation<br>
 <br>[min locus distance]<br> (Integer) minimum distance between each allele locus<br> 
 <br>[number of reference panels]<br> (Integer) number of reference panel species in the VCF<br> 
