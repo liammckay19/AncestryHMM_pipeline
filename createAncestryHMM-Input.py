@@ -46,18 +46,51 @@ def file_len(fname): #https://stackoverflow.com/questions/845058/how-to-get-line
     return i + 1
 class FreqDistanceCalculator :
     def __init__(self):
-        config = configparser.ConfigParser()
-        config.read('config.ini')
+        self.config = configparser.ConfigParser()
+        self.config.read('config.ini')
         print('Your config file input:\n')
-        pretty(dict(config['DEFAULT']),0)
-        self.c = float(config['DEFAULT']['allelefreq cutoff'])
-        self.locusLength = int(config['DEFAULT']['min locus distance'])
-        self.refPanelNumber = int(config['DEFAULT']['number of reference panels'])
-        self.recombinationRate = float(config['DEFAULT']['recombination_rate'])
-        self.minChrom = int(config['DEFAULT']['minChrom'])
-        self.fileName = str(config['DEFAULT']['filename'])
-        self.populationNames = config['DEFAULT']['populationNames'].split(',')
+        pretty(dict(self.config['DEFAULT']),0)
+        self.c = float(self.config['DEFAULT']['allelefreq cutoff'])
+        self.locusLength = int(self.config['DEFAULT']['min locus distance'])
+        self.refPanelNumber = -1
+        self.recombinationRate = float(self.config['DEFAULT']['recombination_rate'])
+        self.minChrom = int(self.config['DEFAULT']['minChrom'])
+        self.fileName = str(self.config['DEFAULT']['filename'])
+        self.refPopulationNames = self.config['DEFAULT']['refPopulationNames'].split(',')
+        self.samplePopulationNames = self.config['DEFAULT']['samplePopulationNames'].split(',')
+        self.populationNames = self.refPopulationNames + self.samplePopulationNames
+        self.refPopColI=[]
+        self.samPopColI=[]  
+        refColIndexString=self.config['DEFAULT']['refPopulationColumnIndices']
+        samColIndexString=self.config['DEFAULT']['samplePopulationColumnIndices']
+        try :
+            self.parseColumnIndices(refColIndexString, self.refPopColI)
+        except:
+            print('Unable to parse column integer numbers from', refColIndexString)
+        try :
+            self.parseColumnIndices(samColIndexString, self.samPopColI)
+        except:
+            print('Unable to parse column integer numbers from', samColIndexString)
+
+        if self.populationNames != [] and (self.samPopColI == [] or self.refPopColI == []):
+            print('Using names of columns not column indices specified')
+        elif self.populationNames == [] and (self.samPopColI == [] or self.refPopColI == []):
+            print('Unable to load columns with information given. \nExiting')
+            exit()
+
+        print()
         self.lineCount = 0
+   
+    def parseColumnIndices (self, string, a):
+        string=string.split(';')
+        for tupleString in string:
+            if ',' in tupleString:
+                ranges = tupleString.split(',')
+                rangeLow = int(ranges[0])
+                rangeHigh = int(ranges[1])
+                a += [list(range(rangeLow,rangeHigh+1))]
+            else:
+                a += [[int(tupleString)]]
 
     def createAncestryHMMInputFile(self, outFileName):
         '''
@@ -97,29 +130,50 @@ class FreqDistanceCalculator :
                 continue
             elif lineList[0].startswith('#'): # header of VCF
                 populationColumnsList = []
-                for populationName in self.populationNames:
-                    populationColumnsList.append([ i for i, column in enumerate(lineList) if re.search('^'+populationName, column) ])
-                
-                if self.refPanelNumber > len(populationColumnsList):
-                    print('Count of references in config is larger than columns in vcf: ref='+str(self.refPanelNumber)+' col='+str(len(populationColumnsList))+'\nExiting')
-                    exit()
-                # check if all columns have been read
-                p = 0
-                initPopulationCount=len(populationColumnsList[0])
-                for populationColumn in populationColumnsList :
-                    if populationColumn == [] :
-                        print("Could not find population "+self.populationNames[p]+'\nContinuing')
-                    p += 1
-                # ref lists [0] [1] ... sample list [2] [3] ...
+                print()
+                if self.refPopColI == [] and self.samPopColI == []:
+                    for populationName in self.populationNames:
+                        populationColumnsList.append([ i for i, column in enumerate(lineList) if re.search('^'+populationName, column) ])
+
+                    # If no reference panel number of columns specified, 
+                    # set to length of reference panels found with names specified
+                    self.refPanelNumber = len(self.refPopulationNames)
+
+                    if self.refPanelNumber > len(self.refPopulationNames) : print('Using more than named reference panels for filtering alleles:\t')
+                    else : print('Using these reference panels for filtering alleles:\t')
+                    for a in range(self.refPanelNumber):
+                        print('\t'+self.populationNames[a]+' | Columns Found: '+str(populationColumnsList[a]))
+
+                    print('Using these samples panels:\t')
+                    # check if all columns have been read
+                    p = 0
+                    initPopulationCount=len(populationColumnsList[0])
+                    for populationColumn in populationColumnsList :
+                        if populationColumn == [] :
+                            print("Could not find population "+self.populationNames[p]+'\nContinuing')
+                        if p>self.refPanelNumber:
+                            print('\t'+self.populationNames[p]+' | Columns Found: '+str(populationColumnsList[p]))
+                        p += 1
+                else :
+                    self.refPanelNumber = len(self.refPopColI)
+                    populationColumnsList = self.refPopColI + self.samPopColI
+                    print('Using these reference panels for filtering alleles:\t')
+                    for x in range(len(self.refPopColI)):
+                        for y in range(len(self.refPopColI[x])) :
+                            print(lineList[self.refPopColI[x][y]],end ="\t")
+
+                    print('Using these sample panels:\t')
+                    for x in range(len(self.samPopColI)):
+                        for y in range(len(self.samPopColI[x])) :
+                            print(lineList[self.samPopColI[x][y]],end ="\t")
+                    print('\n')
+
             else: # actual data of VCF
                
                 for refpopulation in range(0,self.refPanelNumber-1): # compute allele count for at least two reference populations
                     reference1_count=0
                     reference1AlleleA=0
                     bothRefList = list(zip(populationColumnsList[refpopulation+1],populationColumnsList[refpopulation]))
-                    # print(populationColumnsList)
-                    # print((populationColumnsList[refpopulation+1],populationColumnsList[refpopulation]))
-                    # print(bothRefList)
 
                     for column1,column2 in bothRefList:
                         # get 1st chrom - 0/1
@@ -202,8 +256,11 @@ def main():
                 +"\n[recombination_rate]\n\t (Float) estimated recombination rate for recombination probability for Ancestry_HMM input.\n\t Average recombinations per base pairs\n" \
                 +"\n[minChrom]\n\t (Integer) the minimum amount of chromosomes that must be present in the reference panel alleles to make it through the threshold\n" \
                 +"\n[filename]\n\t (String no quotes) Name of VCF file on local machine\n" \
-                +"\n[refPanel names(requires 2 names)]\n\t (at least 2 Strings no quotes) Names of reference panels in the VCF file.\n\t Reference panels should be named like guanaco0 guanaco1 guanaco2 etc.\n\t Example argument: guanaco\n" \
-                +"\n[sample names]\n\t (at least 2 Strings no quotes) Names of sample panels to be run in Ancestry_HMM. \n\t Should be named like llama1 llama2 llama3 etc.\n\t Example argument: llama\n"
+                +"\nThere must be at least a reference and panel specified each in one of two ways\n" \
+                +"\n[refPopulationNames]\n\t (at least 2 Strings no quotes) Names of reference panels in the VCF file.\n\t Reference panels should be named like guanaco0 guanaco1 guanaco2 etc.\n\t Example argument: guanaco,vicugna\n" \
+                +"\n[samplePopulationNames]\n\t (at least 2 Strings no quotes) Names of sample panels to be run in Ancestry_HMM. \n\t Should be named like llama1 llama2 llama3 etc.\n\t Example argument: llama,alpaca\n"\
+                +"\n[refPopulationColumnIndices]\n\t (at least 2 Strings no quotes) Column index of reference panels to be run in Ancestry_HMM. \n\t [Syntax] beginning,end;beginning,end;...\n\t Example argument: 46,49;50,58;59,64\n"\
+                +"\n[samplePopulationColumnIndices]\n\t (at least 2 Strings no quotes) Column index of sample panels to be run in Ancestry_HMM. \n\t [Syntax] beginning,end;beginning,end;...\n\t Example argument: 69;70,82;83,98\n"
     numAboveC = 0
     
     
