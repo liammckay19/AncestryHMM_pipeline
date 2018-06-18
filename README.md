@@ -27,13 +27,16 @@ Undergraduate research Adrian Salguero and Liam McKay under guidance by Russ Cor
 
 # Quickstart:
 - set config.ini with these parameters:<br>
-allelefreq cutoff = 0.5<br>
-min locus distance = 10<br>
-number of reference panels = 4<br>
-recombination_rate = 1e-8<br>
-minChrom = 1<br>
-filename = vcfDownloadTestData/CEU.exon.2010_03.genotypes.vcf<br>
-populationNames = NA121,NA122,NA123,NA124,NA125,NA127,NA128,NA10,NA11,NA120<br>
+<br>[DEFAULT]
+<br>allelefreq cutoff = 0.5
+<br>min locus distance = 10
+<br>recombination_rate = 1e-8
+<br>minChrom = 1
+<br>filename = vcfDownloadTestData/CEU.exon.2010_03.genotypes.vcf
+<br>refPopulationNames = NA121,NA122,NA123
+<br>samplePopulationNames = NA124,NA125,NA127,NA128,NA10,NA11,NA120
+<br>refPopulationColumnIndices = 
+<br>samplePopulationColumnIndices = 
 - Then type in command line: <br>
 `python createAncestryHMM-Input.py`<br>
 - Type a name for output at prompt
