@@ -45,31 +45,31 @@ populationNames = NA121,NA122,NA123,NA124,NA125,NA127,NA128,NA10,NA11,NA120<br>
 To use this program, edit config.ini for your input file in VCF format<br>
 [allelefreq cutoff]<br>
 - (Float) cutoff value for reference panel allele frequency calculation<br>
-<br>[min locus distance]<br>
+[min locus distance]<br>
 - (Integer) minimum distance between each allele locus<br>
-<br>[number of reference panels]<br>
+[number of reference panels]<br>
 - (Integer) number of reference panel columns in the VCF.<br>
-<br>[recombination_rate]<br>
+[recombination_rate]<br>
 - (Float) estimated recombination rate for recombination probability for Ancestry_HMM input.<br>
 - Average recombinations per base pairs<br>
-<br>[minChrom]<br>
+[minChrom]<br>
 - (Integer) the minimum amount of chromosomes that must be present in the reference panel alleles to make it through the threshold<br>
-<br>[filename]<br>
+[filename]<br>
 - (String no quotes) Name of VCF file on local machine<br>
 <br>There must be at least a reference and panel specified each in one of two ways<br>
-<br>[refPopulationNames]<br>
+[refPopulationNames]<br>
 - (at least 2 Strings no quotes) Names of reference panels in the VCF file.<br>
 - Reference panels should be named like guanaco0 guanaco1 guanaco2 etc.<br>
 - Example argument: guanaco,vicugna<br>
-<br>[samplePopulationNames]<br>
+[samplePopulationNames]<br>
 - (at least 2 Strings no quotes) Names of sample panels to be run in Ancestry_HMM. <br>
 - Should be named like llama1 llama2 llama3 etc.<br>
 - Example argument: llama,alpaca<br>
-<br>[refPopulationColumnIndices]<br>
+[refPopulationColumnIndices]<br>
 - (at least 2 Strings no quotes) Column index of reference panels to be run in Ancestry_HMM. <br>
 - [Syntax] beginning,end;beginning,end;...<br>
 - Example argument: 46,49;50,58;59,64<br>
-<br>[samplePopulationColumnIndices]<br>
+[samplePopulationColumnIndices]<br>
 - (at least 2 Strings no quotes) Column index of sample panels to be run in Ancestry_HMM. <br>
 - [Syntax] beginning,end;beginning,end;...<br>
 - Example argument: 69;70,82;83,98<br>
