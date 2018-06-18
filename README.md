@@ -36,9 +36,9 @@ Undergraduate research Adrian Salguero and Liam McKay under guidance by Russ Cor
 <br>refPopulationNames = NA121,NA122,NA123
 <br>samplePopulationNames = NA124,NA125,NA127,NA128,NA10,NA11,NA120
 <br>refPopulationColumnIndices = 
-<br>samplePopulationColumnIndices = <br>
+<br>samplePopulationColumnIndices = 
 <br>
-- Then type in command line: <br>
+- Then type in command line: 
 `python createAncestryHMM-Input.py`<br>
 - Type a name for output at prompt
 - Creates a tsv file with 136 lines 
