@@ -73,4 +73,3 @@ To use this program, edit config.ini for your input file in VCF format<br>
 	- Column index of sample panels to be run in Ancestry_HMM. <br>
 	- [Syntax] beginning,end;beginning,end;...<br>
 	- Example argument: 69;70,82;83,98<br>
-    numAboveC = 0
