@@ -66,11 +66,11 @@ To use this program, edit config.ini for your input file in VCF format<br>
 	- Should be named like llama1 llama2 llama3 etc.<br>
 	- Example argument: llama,alpaca<br>
 <br>[refPopulationColumnIndices]<br>
-	- (at least 2 Strings no quotes) Column index of reference panels to be run in Ancestry_HMM. <br>
+	- Column index of reference panels to be run in Ancestry_HMM. <br>
 	- [Syntax] beginning,end;beginning,end;...<br>
 	- Example argument: 46,49;50,58;59,64<br>
 <br>[samplePopulationColumnIndices]<br>
-	- (at least 2 Strings no quotes) Column index of sample panels to be run in Ancestry_HMM. <br>
+	- Column index of sample panels to be run in Ancestry_HMM. <br>
 	- [Syntax] beginning,end;beginning,end;...<br>
 	- Example argument: 69;70,82;83,98<br>
     numAboveC = 0
