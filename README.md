@@ -26,6 +26,7 @@ Undergraduate research Adrian Salguero and Liam McKay under guidance by Russ Cor
 - (To check what version of python you have type `python --version`)
 
 # Quickstart:
+- MUST CREATE A FILE CALLED config.ini FOR RUNTIME PARAMETERS
 - set config.ini with these parameters:<br>
 <br>[DEFAULT]
 <br>allelefreq cutoff = 0.5
